@@ -9,6 +9,8 @@ var path = require('path');
 var mongoose = require('mongoose');
 var passport = require('passport');
 var expressValidator = require('express-validator');
+var exphbs = require('express3-handlebars');
+var helpers = require('./lib/helpers');
 
 /**
  * Load controllers.
@@ -32,7 +34,6 @@ var passportConf = require('./config/passport');
 
 var app = express();
 
-
 /**
  * Mongoose configuration.
  */
@@ -42,6 +43,14 @@ mongoose.connection.on('error', function() {
   console.error('✗ MongoDB Connection Error. Please make sure MongoDB is running.');
 });
 
+/**
+ * Handlebars configuration.
+ */
+
+var hbs = exphbs.create({
+  defaultLayout: 'layout',
+  helpers: helpers
+});
 
 /**
  * Express configuration.
@@ -54,7 +63,8 @@ var month = (day * 30);
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.engine('handlebars', hbs.engine)
+app.set('view engine', 'handlebars');
 app.use(require('connect-assets')({
   src: 'public',
   helperContext: app.locals
@@ -85,7 +95,9 @@ app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: week }));
 app.use(function(req, res) {
   res.status(404);
-  res.render('404');
+  res.render('404', {
+    layout: false
+  });
 });
 app.use(express.errorHandler());
 
